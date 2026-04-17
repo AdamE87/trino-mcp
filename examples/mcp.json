@@ -1,0 +1,47 @@
+{
+  "_comment": "Forward TRINO_USER / TRINO_PASSWORD from the host shell into the container. Listing the variable name after -e without a value tells `docker run` to read its value from the current process's environment, so secrets stay on the host and never appear in this file.",
+  "mcpServers": {
+    "trino": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e", "TRINO_HOST",
+        "-e", "TRINO_PORT",
+        "-e", "TRINO_HTTP_SCHEME",
+        "-e", "TRINO_USER",
+        "-e", "TRINO_PASSWORD",
+        "-e", "TRINO_CATALOG",
+        "-e", "TRINO_SCHEMA",
+        "-e", "TRINO_MAX_ROWS",
+        "trino-mcp:latest"
+      ],
+      "env": {
+        "TRINO_HOST": "trino.example.com",
+        "TRINO_PORT": "443",
+        "TRINO_HTTP_SCHEME": "https",
+        "TRINO_USER": "${TRINO_USER}",
+        "TRINO_PASSWORD": "${TRINO_PASSWORD}",
+        "TRINO_CATALOG": "hive",
+        "TRINO_SCHEMA": "default",
+        "TRINO_MAX_ROWS": "1000"
+      }
+    },
+    "trino-from-env-file": {
+      "_comment": "Alternative: load credentials from a host-side env file rather than individual variables.",
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--env-file", "/etc/trino-mcp/credentials.env",
+        "-e", "TRINO_HOST=trino.example.com",
+        "-e", "TRINO_PORT=443",
+        "-e", "TRINO_HTTP_SCHEME=https",
+        "-e", "TRINO_MAX_ROWS=1000",
+        "trino-mcp:latest"
+      ]
+    }
+  }
+}

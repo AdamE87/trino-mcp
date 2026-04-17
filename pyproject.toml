@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "trino-mcp"
+version = "0.1.0"
+description = "Read-only Model Context Protocol server for Trino."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "trino-mcp contributors" }]
+keywords = ["trino", "mcp", "model-context-protocol", "sql"]
+dependencies = [
+    "mcp>=1.2.0",
+    "trino>=0.330.0",
+    "sqlparse>=0.4.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[project.scripts]
+trino-mcp = "trino_mcp.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/trino_mcp"]
