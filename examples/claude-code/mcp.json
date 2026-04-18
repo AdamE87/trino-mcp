@@ -1,0 +1,32 @@
+{
+  "_comment": "Template for Claude Code. Copy this file to `.mcp.json` at the ROOT of your own project so Claude Code auto-loads it. The filename here deliberately omits the leading dot so this template is not itself auto-loaded when someone opens this directory in Claude Code. The key under mcpServers (`trino`) determines the tool prefix Claude Code sees: tools appear as mcp__trino__<name>. The trino-query sub-agent's `tools:` list must match that prefix. TRINO_USER / TRINO_PASSWORD are forwarded from the host shell via `-e VAR` (no `=value`), so secrets stay out of this file.",
+  "mcpServers": {
+    "trino": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e", "TRINO_HOST",
+        "-e", "TRINO_PORT",
+        "-e", "TRINO_HTTP_SCHEME",
+        "-e", "TRINO_USER",
+        "-e", "TRINO_PASSWORD",
+        "-e", "TRINO_CATALOG",
+        "-e", "TRINO_SCHEMA",
+        "-e", "TRINO_MAX_ROWS",
+        "trino-mcp:latest"
+      ],
+      "env": {
+        "TRINO_HOST": "trino.example.com",
+        "TRINO_PORT": "443",
+        "TRINO_HTTP_SCHEME": "https",
+        "TRINO_USER": "${TRINO_USER}",
+        "TRINO_PASSWORD": "${TRINO_PASSWORD}",
+        "TRINO_CATALOG": "hive",
+        "TRINO_SCHEMA": "default",
+        "TRINO_MAX_ROWS": "1000"
+      }
+    }
+  }
+}
