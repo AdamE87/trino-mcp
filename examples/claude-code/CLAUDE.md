@@ -15,6 +15,21 @@ Why:
 - The sub-agent's tool allowlist makes it impossible for it to do
   anything other than query Trino, which is a useful safety property.
 
-When delegating, pass the user's question through unchanged unless you
-need to add constraints (e.g. "only the `prod` catalog"). Treat the
-sub-agent's answer as authoritative for data questions.
+## Briefing the sub-agent
+
+The sub-agent cannot see this conversation. It sees only its own system
+prompt and the `prompt` field you pass to the `Agent` tool — so that
+brief must be self-contained. Specifically, forward any context it
+needs to do the job:
+
+- The actual question, in full (don't paraphrase down to a keyword).
+- Any catalog / schema / table the user has already named or that you've
+  inferred from earlier turns.
+- Time ranges, filters, or definitions the user established earlier
+  (e.g. "by 'active user' they mean `last_seen_at > now() - 30d`").
+- The shape of answer you want back (a count, a top-10 table, a single
+  row, a yes/no).
+
+If the user's question is ambiguous, resolve the ambiguity with them
+before delegating — the sub-agent has no way to ask clarifying
+questions back. Treat its answer as authoritative for data questions.

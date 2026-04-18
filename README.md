@@ -144,14 +144,15 @@ Other notes:
 
 A fuller example lives in [`examples/mcp.json`](examples/mcp.json).
 
-### Using with Claude Code (Opus root + Haiku sub-agent)
+### Using with Claude Code (delegated Haiku sub-agent)
 
 [`examples/claude-code/`](examples/claude-code/) is a drop-in
-configuration that pairs an Opus root agent with a narrow Haiku
-sub-agent whose only tools are `mcp__trino__*`. The root session
-delegates data questions to the sub-agent, keeping query results out of
-its context and schema exploration off the expensive model. See that
-directory's README for the architecture and copy-in instructions.
+configuration that pairs your Claude Code root session (Opus or Sonnet —
+both work) with a narrow Haiku sub-agent whose only tools are
+`mcp__trino__*`. The root delegates data questions to the sub-agent,
+keeping query results out of its context and schema exploration off the
+larger model. See that directory's README for the architecture and
+copy-in instructions.
 
 ### Local Trino for development
 

@@ -1,12 +1,13 @@
-# Claude Code: Opus root + Haiku Trino sub-agent
+# Claude Code: general-purpose root + Haiku Trino sub-agent
 
-This directory is a drop-in Claude Code configuration that pairs a powerful
-Opus root agent with a narrow, cheap Haiku sub-agent whose only capability
-is querying Trino via [`trino-mcp`](../..).
+This directory is a drop-in Claude Code configuration that pairs your
+main Claude Code session (Opus or Sonnet — your choice) with a narrow,
+cheap Haiku sub-agent whose only capability is querying Trino via
+[`trino-mcp`](../..).
 
 ```
 ┌──────────────────────────────────────┐
-│  Root session (Opus)                 │
+│  Root session (your preferred model) │
 │  general reasoning, file edits, etc. │
 └───────────────┬──────────────────────┘
                 │  Agent(subagent_type="trino-query", ...)
@@ -17,12 +18,16 @@ is querying Trino via [`trino-mcp`](../..).
        └────────────────────────┘
 ```
 
+The root model is selected at the Claude Code level (via `/model` or the
+launch flag), not in any file here — so you can freely switch between
+Opus and Sonnet without touching this config.
+
 ## Why split it this way
 
-- **Cost.** Schema exploration and SQL drafting don't need Opus-level
-  reasoning. Haiku handles the `list_catalogs → list_schemas →
-  list_tables → describe_table → execute_query` loop at a fraction of
-  the price.
+- **Cost.** Schema exploration and SQL drafting don't need the root
+  model's full reasoning budget. Haiku handles the `list_catalogs →
+  list_schemas → list_tables → describe_table → execute_query` loop at
+  a fraction of the price.
 - **Context hygiene.** Large `describe_table` and query results stay in
   the sub-agent's context; only the synthesized answer comes back to the
   root session.
@@ -36,7 +41,7 @@ is querying Trino via [`trino-mcp`](../..).
 | Path                                    | Purpose                                                                 |
 | --------------------------------------- | ----------------------------------------------------------------------- |
 | `.claude/agents/trino-query.md`         | Haiku sub-agent: frontmatter sets the model and tool allowlist; the body is its system prompt. |
-| `CLAUDE.md`                             | Project memory that tells the root Opus agent to delegate all Trino questions to `trino-query` rather than calling the MCP tools itself. |
+| `CLAUDE.md`                             | Project memory that tells the root agent to delegate all Trino questions to `trino-query` rather than calling the MCP tools itself. |
 | `mcp.json`                              | Template MCP-server registration. Rename to `.mcp.json` at your project root to enable auto-loading. The filename omits the leading dot here so Claude Code does **not** auto-load the template if someone opens this example directory directly. |
 
 ## Adopting it in your own project
@@ -66,7 +71,8 @@ is querying Trino via [`trino-mcp`](../..).
    export TRINO_PASSWORD="$(op read op://Eng/Trino/password)"   # or equivalent
    ```
 
-5. **Open your project in Claude Code on Opus** and ask a data question.
+5. **Open your project in Claude Code** (Opus or Sonnet as the root
+   model — both work) and ask a data question.
 
 ## Verifying it works
 
@@ -76,7 +82,7 @@ Ask:
 
 Expected behavior:
 
-- The root Opus session calls `Agent(subagent_type="trino-query", ...)`
+- The root session calls `Agent(subagent_type="trino-query", ...)`
   rather than calling `mcp__trino__list_catalogs` itself.
 - The sub-agent invokes `mcp__trino__list_catalogs` and returns a short
   list (e.g. `system`, `tpch`, plus whatever you've configured).
@@ -101,8 +107,25 @@ docker compose up -d trino
 docker build -t trino-mcp:latest .
 # in your project: point TRINO_HOST at localhost:8080, no auth needed
 export TRINO_HOST=localhost TRINO_PORT=8080 TRINO_USER=trino-mcp
-claude  # open Claude Code on Opus
+claude  # open Claude Code (Opus or Sonnet as the root)
 ```
+
+## Picking the sub-agent model
+
+Haiku 4.5 is the default because it handles the common path cheaply and
+fast: structured tool loops, `list_* → describe → execute`, and basic
+Trino SQL (`SELECT`, `WHERE`, `GROUP BY`, `LIMIT`, simple joins). For
+complex analytical SQL — multi-join CTEs with window functions,
+partition-pruning rewrites, disambiguating vague requests across
+similar tables — Haiku can produce wrong queries. Upgrade the sub-agent
+to Sonnet by editing the frontmatter in `.claude/agents/trino-query.md`:
+
+```yaml
+model: sonnet
+```
+
+Or keep Haiku as the default and add a second sub-agent (e.g.
+`trino-analyst` on Sonnet) so the root picks by question complexity.
 
 ## See also
 
