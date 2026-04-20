@@ -29,6 +29,13 @@ needs to do the job:
   (e.g. "by 'active user' they mean `last_seen_at > now() - 30d`").
 - The shape of answer you want back (a count, a top-10 table, a single
   row, a yes/no).
+- Any catalog/schema signals verbatim — names the user typed, the
+  environment (`prod`, `staging`), or dataset nicknames. The sub-agent
+  will resolve these against `list_catalogs` / `list_schemas`; it
+  should not have to re-derive them from a bare noun. `TRINO_CATALOG`
+  / `TRINO_SCHEMA` in `.mcp.json` are only fallbacks for unqualified
+  SQL — the sub-agent can target any catalog/schema in the cluster,
+  and a single session can touch several.
 
 If the user's question is ambiguous, resolve the ambiguity with them
 before delegating — the sub-agent has no way to ask clarifying
