@@ -35,6 +35,10 @@ Opus and Sonnet without touching this config.
   seven `mcp__trino__*` tools — no Bash, Edit, Write, or WebFetch. With
   the server's read-only SQL validator and a least-privilege Trino user,
   that's three defense layers before a write ever reaches the cluster.
+- **Flexibility.** A single session can target any number of catalogs
+  and schemas. The sub-agent picks per-query from the user's prompt;
+  `TRINO_CATALOG` / `TRINO_SCHEMA` in `.mcp.json` are fallback defaults
+  for unqualified SQL, not bindings.
 
 ## Files
 
@@ -109,6 +113,31 @@ docker build -t trino-mcp:latest .
 export TRINO_HOST=localhost TRINO_PORT=8080 TRINO_USER=trino-mcp
 claude  # open Claude Code (Opus or Sonnet as the root)
 ```
+
+## Targeting different catalogs/schemas in one session
+
+The sub-agent resolves catalog and schema **per query, from your
+prompt** — you don't restart anything to switch. Example flow in a
+single session (env defaults are irrelevant to the outcome):
+
+> **You:** What tables live in `hive.prod`?
+> **Sub-agent:** calls `list_tables(catalog="hive", schema="prod")`.
+
+> **You:** Same for `iceberg.analytics`.
+> **Sub-agent:** calls `list_tables(catalog="iceberg", schema="analytics")`
+> in the same session — no restart, no `.mcp.json` edit.
+
+> **You:** Count rows in the events table in iceberg.analytics for the
+> last day.
+> **Sub-agent:** runs
+> `SELECT count(*) FROM iceberg.analytics.events WHERE event_date >= current_date - interval '1' day`
+> (fully-qualified, regardless of `TRINO_CATALOG`).
+
+Concept words work too — "prod", "staging", "the clickstream warehouse"
+— the sub-agent will call `list_catalogs` / `list_schemas` and match
+the wording. If more than one plausible match remains it asks rather
+than guesses, so when you know the exact names it's faster to include
+them.
 
 ## Picking the sub-agent model
 
